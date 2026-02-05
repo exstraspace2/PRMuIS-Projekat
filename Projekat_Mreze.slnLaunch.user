@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "Projekat_Mreze\\Projekat_Mreze.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Klient\\Klient.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
