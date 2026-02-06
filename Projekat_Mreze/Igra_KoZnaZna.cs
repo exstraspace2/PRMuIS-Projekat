@@ -17,21 +17,21 @@ namespace Projekat_mreze
 
         public Igra_KoZnaZna()
         {
-
+            UcitajPitanja();
         }
 
         public void UcitajPitanja()
         {
             SvaPitanja = new Dictionary<string, int>
             {
-                { "Koje godine je pao Berlinski zid?\n1-1961\n2-1989\n3-Kad god da je objavljen film 'Atomic Blonde'", 2 },
+                { "Koje godine je pao Berlinski zid?\n1-1961\n2-1989\n3-1970", 2 },
                 { "Koji je glavni grad Australije?\n1-Sidnej\n2-Melburn\n3-Kanbera", 3 },
                 { "Koliko kontinenata ima na Zemlji?\n1-5\n2-6\n3-7", 3 },
                 { "U kom gradu se nalazi Ajfelov toranj?\n1-London\n2-Berlin\n3-Pariz", 3 },
                 { "U kom sportu se koristi termin 'as'?\n1-Košarka\n2-Tenis\n3-Fudbal", 2 },
                 { "Koja država je domaćin Olimpijskih igara 2016?\n1-Kina\n2-Velika Britanija\n3-Brazil", 3 },
                 { "Ko je autor romana 'Na Drini ćuprija'?\n1-Ivo Andrić\n2-Fjodor Dostojevski\n3-Lav Tolstoj", 1 },
-                { "Koji je glavni grad Australije?\n1-Sidnej\n2-Melburn\n3-Kanbera", 3 },
+                { "Koji je hemijski simbol za zlato?\n1-Ag\n2-Au\n3-Fe", 2 },
                 { "Ko je naslikao 'Mona Lisu'?\n1-Mikelanđelo\n2-Leonardo da Vinči\n3-Rafael", 2 },
                 { "Ko je režirao film 'Titanik'?\n1-Stiven Spilberg\n2-Džejms Kameron\n3-Ridli Skot", 2 }
             };

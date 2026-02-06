@@ -17,7 +17,6 @@ class Klient
             Console.Write("Unesi igre (sl,sk,kzz): ");
             string igre = Console.ReadLine();
 
-            // 1. UDP prijava
             Socket udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             string prijava = $"PRIJAVA:{ime},{igre}";
             byte[] prijavaBytes = Encoding.UTF8.GetBytes(prijava);
@@ -26,14 +25,12 @@ class Klient
             udpSocket.SendTo(prijavaBytes, serverEP);
             Console.WriteLine("Poslata prijava\n");
 
-            // 2. Prima TCP info
             byte[] odgovorBuffer = new byte[1024];
             EndPoint odgovorEP = new IPEndPoint(IPAddress.Any, 0);
             int odgovorBytes = udpSocket.ReceiveFrom(odgovorBuffer, ref odgovorEP);
             string odgovor = Encoding.UTF8.GetString(odgovorBuffer, 0, odgovorBytes);
             Console.WriteLine($"Odgovor servera: {odgovor}");
 
-            // 3. Povezuje se na TCP
             string[] tcpInfo = odgovor.Split(':');
             string tcpIP = tcpInfo[1];
             int tcpPort = int.Parse(tcpInfo[2]);
@@ -42,13 +39,11 @@ class Klient
             tcpSocket.Connect(new IPEndPoint(IPAddress.Parse(tcpIP), tcpPort));
             Console.WriteLine($"Povezan na TCP server {tcpIP}:{tcpPort}\n");
 
-            // 4. Prima pozdrav
             byte[] pozdravBuffer = new byte[1024];
             int pozdravBytes = tcpSocket.Receive(pozdravBuffer);
             string pozdrav = Encoding.UTF8.GetString(pozdravBuffer, 0, pozdravBytes);
             Console.WriteLine($"Server: {pozdrav}\n");
 
-            // 5. Šalje SPREMAN
             Console.Write("Unesi SPREMAN kada si spreman: ");
             string unos = Console.ReadLine();
 
@@ -60,7 +55,8 @@ class Klient
                     tcpSocket.Send(spremanBytes);
                     Console.WriteLine("Poslao SPREMAN serveru");
 
-                    // Prima potvrdu
+                    PokreniKviz(tcpSocket);
+
                     byte[] potvrdaBuffer = new byte[1024];
                     int potvrdaBytes = tcpSocket.Receive(potvrdaBuffer);
                     string potvrda = Encoding.UTF8.GetString(potvrdaBuffer, 0, potvrdaBytes);
@@ -72,7 +68,6 @@ class Klient
                 }
             }
 
-            // Cisti
             tcpSocket.Close();
             udpSocket.Close();
         }
@@ -83,5 +78,79 @@ class Klient
 
         Console.WriteLine("\nPritisni Enter za izlaz...");
         Console.ReadLine();
+    }
+
+    static void PokreniKviz(Socket socket)
+    {
+        try
+        {
+            bool kvizTraje = true;
+            byte[] buffer = new byte[4096];
+
+            while (kvizTraje)
+            {
+                int bytes = socket.Receive(buffer);
+
+                if (bytes == 0) break;
+
+                string poruka = Encoding.UTF8.GetString(buffer, 0, bytes);
+
+                string[] delovi = poruka.Split(new string[] { "SKOČKO", "MOJ BROJ", "KO ZNA ZNA", "Dobili ste", "KRAJ_KVIZA" }, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (string deo in delovi)
+                {
+                    if (string.IsNullOrWhiteSpace(deo)) continue;
+
+                    string cetvrtinaPoruka = deo.Trim();
+
+                    if (poruka.Contains("SKOČKO") && deo.Contains("Pogodite"))
+                        cetvrtinaPoruka = "SKOČKO" + cetvrtinaPoruka;
+                    else if (poruka.Contains("MOJ BROJ") && deo.Contains("Traženi"))
+                        cetvrtinaPoruka = "MOJ BROJ" + cetvrtinaPoruka;
+                    else if (poruka.Contains("KO ZNA ZNA") && deo.Contains("Unesi"))
+                        cetvrtinaPoruka = "KO ZNA ZNA" + cetvrtinaPoruka;
+
+                    Console.WriteLine($"\n{cetvrtinaPoruka}");
+
+                    if (cetvrtinaPoruka.Contains("KRAJ_KVIZA") || cetvrtinaPoruka.Contains("pobednik") ||
+                        cetvrtinaPoruka.Contains("ČESTITAMO") || cetvrtinaPoruka.Contains("Hvala"))
+                    {
+                        Console.WriteLine("\n*** KVIZ ZAVRŠEN ***");
+                        kvizTraje = false;
+                        return;
+                    }
+
+                    if (cetvrtinaPoruka.Contains("Unesi") || cetvrtinaPoruka.Contains("unesi") ||
+                        cetvrtinaPoruka.Contains("Pošaljite") || cetvrtinaPoruka.Contains("pošaljite"))
+                    {
+                        Console.Write("\nTvoj odgovor: ");
+                        string odgovor = Console.ReadLine();
+
+                        socket.Send(Encoding.UTF8.GetBytes(odgovor));
+
+                        if (cetvrtinaPoruka.Contains("SKOČKO") || cetvrtinaPoruka.Contains("Skočko"))
+                        {
+                            bytes = socket.Receive(buffer);
+                            string rezultat = Encoding.UTF8.GetString(buffer, 0, bytes);
+                            Console.WriteLine($"\n{rezultat}");
+
+                            bytes = socket.Receive(buffer);
+                            string poeni = Encoding.UTF8.GetString(buffer, 0, bytes);
+                            Console.WriteLine($"\n{poeni}");
+                        }
+                        else
+                        {
+                            bytes = socket.Receive(buffer);
+                            string poeni = Encoding.UTF8.GetString(buffer, 0, bytes);
+                            Console.WriteLine($"\n{poeni}");
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"\nGreška u kvizu: {ex.Message}");
+        }
     }
 }
