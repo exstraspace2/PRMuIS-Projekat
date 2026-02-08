@@ -130,13 +130,19 @@ class Klient
 
                         if (cetvrtinaPoruka.Contains("SKOČKO") || cetvrtinaPoruka.Contains("Skočko"))
                         {
-                            bytes = socket.Receive(buffer);
-                            string rezultat = Encoding.UTF8.GetString(buffer, 0, bytes);
-                            Console.WriteLine($"\n{rezultat}");
-
-                            bytes = socket.Receive(buffer);
-                            string poeni = Encoding.UTF8.GetString(buffer, 0, bytes);
-                            Console.WriteLine($"\n{poeni}");
+                            while (true)
+                            {
+                             bytes = socket.Receive(buffer);
+                             string porukaSk = Encoding.UTF8.GetString(buffer, 0, bytes);
+                             Console.WriteLine($"\n{porukaSk}");
+                                if (porukaSk.Contains("POGODAK") || porukaSk.Contains("NISTE POGODILI"))
+                                {
+                                    break; // kraj Skocka
+                                }
+                            Console.Write("\nTvoj odgovor: ");
+                            string noviPokusaj = Console.ReadLine();
+                            socket.Send(Encoding.UTF8.GetBytes(noviPokusaj));
+                            }
                         }
                         else
                         {

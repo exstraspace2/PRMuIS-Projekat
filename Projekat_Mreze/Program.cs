@@ -163,9 +163,14 @@ class Server
 
                 socket.Send(Encoding.UTF8.GetBytes(pitanje));
 
+                string odgovor = null; 
+
+                if (igra != "sk")
+                {
                 byte[] buffer = new byte[1024];
                 int bytes = socket.Receive(buffer);
-                string odgovor = Encoding.UTF8.GetString(buffer, 0, bytes).Trim();
+                odgovor = Encoding.UTF8.GetString(buffer, 0, bytes).Trim();
+                }
 
                 int poeni = 0;
                 switch (igra)
@@ -174,11 +179,31 @@ class Server
                         poeni = igraMojBroj.Proveri_Izraz(odgovor);
                         break;
                     case "sk":
-                        string rezultat = igraSkocko.ProveriKombinaciju(odgovor);
-                        socket.Send(Encoding.UTF8.GetBytes(rezultat));
-                        if (igraSkocko.DaLiJePogodio(odgovor))
-                            poeni = igraSkocko.DodeliPoene();
-                        break;
+                        {
+                         bool pogodjeno = false;
+                         while (!pogodjeno && igraSkocko.BrojPokusaja < 6)
+                            {
+                             byte[] bufferSk = new byte[1024];
+                             int bytesSk = socket.Receive(bufferSk);
+                             string pokusaj = Encoding.UTF8.GetString(bufferSk, 0, bytesSk).Trim().ToUpper();
+                             string rezultat = igraSkocko.ProveriKombinaciju(pokusaj);
+                             socket.Send(Encoding.UTF8.GetBytes(rezultat));
+                                if (igraSkocko.DaLiJePogodio(pokusaj))
+                                {
+                                 poeni = igraSkocko.DodeliPoene();
+                                 socket.Send(Encoding.UTF8.GetBytes("POGODAK!"));
+                                 pogodjeno = true;
+                                }
+                                else if (igraSkocko.BrojPokusaja >= 6)
+                                {
+                                socket.Send(Encoding.UTF8.GetBytes(
+                                $"Netacno! Pravilna kombinacija je: {igraSkocko.TrazenaKombinacija}"
+                                 ));
+                                 break;
+                                }
+                            }
+                            break;
+                        }
                     case "kzz":
                         if (int.TryParse(odgovor, out int broj))
                         {
